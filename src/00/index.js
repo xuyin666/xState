@@ -1,17 +1,29 @@
-import { createMachine } from 'xstate';
+import { createMachine, interpret } from 'xstate';
 
-const elOutput = document.querySelector('#output');
+const feedbackMachine = createMachine({
+    initial: 'question',
+    states: {
+      question: {
+        on: {
+          CLICK_GOOD: {
+            target: 'thanks',
+          }
+        },
+      },
+      form: {},
+      thanks: {},
+      closed: {},
+    }
+});
 
-function output(object) {
-  elOutput.innerHTML = JSON.stringify(object, null, 2);
-}
+const feedbackService = interpret(feedbackMachine);
 
-console.log('Welcome to the XState workshop!');
+feedbackService.onTransition(state => {
+  console.log(state.value);
+});
 
-const user = {
-  name: 'David Khourshid',
-  company: 'Microsoft',
-  interests: ['piano', 'state machines'],
-};
+feedbackService.start()
 
-output(user);
+feedbackService.send({
+  type: 'CLICK_GOOD'
+})
