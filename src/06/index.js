@@ -36,6 +36,10 @@ const countDrags = assign({
   },
 });
 
+const notMaxDrags = (context, event) => {
+  return context.drags < 5;
+};
+
 const resetPosition = assign({
   dx: 0,
   dy: 0,
@@ -57,12 +61,19 @@ const machine = createMachine({
   states: {
     idle: {
       on: {
-        mousedown: {
-          cond: notMaxDrags,
+        mousedown: [{
+          cond: 'notMaxDrags',
           actions: assignPoint,
           target: 'dragging',
         },
+        {
+          target: 'draggedOut',
+        }
+        ]
       },
+    },
+    draggedOut: {
+      type: 'final'
     },
     dragging: {
       entry: countDrags,
@@ -84,7 +95,13 @@ const machine = createMachine({
       },
     },
   },
-});
+},
+  {
+    guards: {
+        notMaxDrags: notMaxDrags,
+     },
+  }
+);
 
 const service = interpret(machine);
 
