@@ -1,8 +1,9 @@
-import { createMachine, assign, interpret } from 'xstate';
+import { createMachine, assign, interpret, send } from 'xstate';
 
 const elBox = document.querySelector('#box');
 
 const randomFetch = () => {
+  console.log('Fetching!!')
   return new Promise((res, rej) => {
     setTimeout(() => {
       if (Math.random() < 0.5) {
@@ -23,15 +24,45 @@ const machine = createMachine({
       },
     },
     pending: {
+      on: {
+        I_AM_DONE: 'resolved',
+        CANCEL: 'idle', 
+        SEND_IT_ALREADY: {
+          actions: send(
+            {
+              type: 'SEND_IT_ALREADY',
+            },
+            {
+              to: 'child',
+            }
+          )
+        }
+      },
       invoke: {
+        id: 'child',
         // Invoke your promise here.
         // The `src` should be a function that returns the source.
+        src: (context, event) => (sendBack, receive) => {
+          receive((event) => {
+            if(event.type === 'SEND_IT_ALREADY') {
+              sendBack({
+                type: 'I_AM_DONE'
+              });
+            }
+          });
+        },
       },
     },
     resolved: {
+      on: {
+        FETCH: 'pending',
+      }
       // Add a transition to fetch again
     },
     rejected: {
+      on: {
+        FETCH: 'pending',
+      }
       // Add a transition to fetch again
     },
   },
@@ -49,4 +80,11 @@ service.start();
 
 elBox.addEventListener('click', (event) => {
   service.send('FETCH');
+});
+
+
+const elCancel = document.querySelector('#cancel');
+
+elCancel.addEventListener('click', (event) => {
+  service.send('SEND_IT_ALREADY');
 });

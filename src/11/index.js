@@ -14,6 +14,44 @@ const displayMachine = createMachine({
       },
     },
     visible: {
+      type: 'parallel',
+      on: {
+        TURN_OFF: 'hidden',
+      },
+      states: {
+        mode: {
+          initial: 'light',
+          states: {
+            light: {
+              on: {
+                SWITCH: 'dark'
+              }
+            },
+            dark: {
+              on: {
+                SWITCH: 'light'
+              }
+            },
+          },
+        },
+        brightness: {
+          initial: 'bright',
+          states: {
+            bright: {
+              after: {
+                TIMEOUT:{
+                  target: 'dim'
+                }
+              }
+            },
+            dim: {
+              on: {
+                SWITCH: 'bright'
+              }
+            },
+          }
+        }
+      }
       // Add parallel states here for:
       // - mode (light or dark)
       // - brightness (bright or dim)
@@ -21,10 +59,15 @@ const displayMachine = createMachine({
       // parallel states should transition between each other.
     },
   },
+},{
+  delays: {
+    TIMEOUT: 5000,
+  }
 });
 
 const displayService = interpret(displayMachine)
   .onTransition((state) => {
+    console.log(state);
     elApp.dataset.state = state.toStrings().join(' ');
   })
   .start();

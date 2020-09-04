@@ -5,15 +5,55 @@ const elOffButton = document.querySelector('#offButton');
 const elOnButton = document.querySelector('#onButton');
 const elModeButton = document.querySelector('#modeButton');
 
+const someMachine = createMachine({
+  initial: 'something',
+  states: {
+    something: {
+      initial: 'one',
+      states: {
+        one: {},
+        two: {},
+        hist: {
+          type: 'history',
+        },
+      },
+    },
+    somethingElse: {
+      on: {
+        TOGGLE: 'something.hist',
+      },
+    },
+  },
+});
+
+
+
+
 const displayMachine = createMachine({
   initial: 'hidden',
   states: {
     hidden: {
       on: {
-        TURN_ON: 'visible',
+        TURN_ON: 'visible.hist',
       },
     },
     visible: {
+      initial: 'light',
+      states: {
+        light: {
+          on:{
+            SWITCH: 'dark',
+          }
+        },
+        dark: {
+          on :{
+            SWITCH: 'light',
+          }
+        },
+        hist: {
+          type: 'history',
+        },
+      },
       // Add hierarchical states for light/dark mode.
       // ...
 
@@ -28,6 +68,7 @@ const displayMachine = createMachine({
 
 const displayService = interpret(displayMachine)
   .onTransition((state) => {
+    console.log(state);
     elApp.dataset.state = state.toStrings().join(' ');
   })
   .start();

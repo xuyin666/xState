@@ -30,12 +30,20 @@ const assignDelta = assign({
   },
 });
 
+
+const assignXDelta = assign({
+  dx : (context, event) => {
+    return event.clientX - context.px;
+  }
+});
+
 const resetPosition = assign({
   dx: 0,
   dy: 0,
   px: 0,
   py: 0,
 });
+
 
 const dragDropMachine = createMachine({
   initial: 'idle',
@@ -62,6 +70,22 @@ const dragDropMachine = createMachine({
       // that transitions to a "locked" x-axis behavior
       // when the shift key is pressed.
       // ...
+      initial: 'normal',
+      states: {
+        normal: {
+          on: {
+            'keydown.shift': 'locked',
+          },
+        },
+        locked: {
+          on: {
+            mousemove: {
+              action: assignXDelta
+            },
+            'keyup.shift': 'normal',
+          }
+        }
+      },
       on: {
         mousemove: {
           actions: assignDelta,
@@ -113,6 +137,18 @@ elBody.addEventListener('keyup', (e) => {
   }
 });
 
+elBody.addEventListener('keyup', (e)=> {
+  if(e.key === 'Shift') {
+    service.send('keyup.shift');
+  }
+})
+
+
+elBody.addEventListener('keydown', (e) => {
+  if(e.key === 'Shift') {
+    service.send('keydown.shift');
+  }
+})
 // Add event listeners for keyup and keydown on the body
 // to listen for the 'Shift' key.
 // ...
